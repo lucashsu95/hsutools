@@ -4,7 +4,7 @@
 
 1. 下載後用**以系統管理員身份執行**`setup.exe`檔
 2. 就可以把資料夾刪除了
-3. 到需要使用的地方下指令(ex:hsutools mfile)
+3. 到需要使用的地方下指令(ex:hsu filem,hsu rename,hsu cpath,hsu cpath --path <path>)
 
 ## Introduce
 
