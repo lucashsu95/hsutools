@@ -12,9 +12,9 @@ for req in requirements:
 
 command.append('src/main.py')
 print(command)
-subprocess.run(command)
+subprocess.run(command,shell=True)
 
 
 # build setup
 command = ['pyinstaller', '-F', '--name=setup' , 'src/setup.py']
-subprocess.run(command)
+subprocess.run(command,shell=True)
