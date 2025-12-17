@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v3
+      - name: Install deps
+        run: |
+          poetry install --no-interaction --no-root
+          poetry install --no-interaction
+      - name: Build wheel and sdist
+        run: poetry build
+      - name: Upload packages artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: dist/*
+
+  build-exe:
+    runs-on: windows-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v3
+      - name: Install deps (includes dev for PyInstaller)
+        run: |
+          poetry install --no-interaction
+      - name: Build exe via Typer command
+        run: poetry run hsu build-exe
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: dist/**/*.exe
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [build, build-exe]
+    steps:
+      - name: Download package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: packages
+          path: artifacts/packages
+      - name: Download exe artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-exe
+          path: artifacts/windows-exe
+          # exe might not exist if build-exe failed; ignore to still publish to PyPI
+          if-no-files-found: ignore
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: artifacts/packages
+        env:
+          # Set PYPI_API_TOKEN in repo secrets
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Create GitHub Release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/packages/*
+            artifacts/windows-exe/*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

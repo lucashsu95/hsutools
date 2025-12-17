@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v3
+      - name: Install deps
+        run: |
+          poetry install --no-interaction --no-root
+          poetry install --no-interaction
+      - name: Run tests
+        run: poetry run pytest
+      - name: Build wheel and sdist
+        run: poetry build
+
+  build-exe:
+    runs-on: windows-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v3
+      - name: Install deps with dev (for PyInstaller)
+        run: |
+          poetry install --no-interaction
+      - name: Build exe via Typer command
+        run: poetry run hsu build-exe
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hsu-exe
+          path: dist/**/*.exe
