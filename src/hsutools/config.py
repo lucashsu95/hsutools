@@ -4,6 +4,20 @@ APP_NAME = "hsu"
 DEFAULT_OUTPUT_FILE = "path.md"
 DEFAULT_IGNORE_NAMES = {".git", "README.md", "path.md", "__pycache__"}
 DOCX_EXTENSION = ".docx"
+IMAGE_EXTENSIONS = {
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".jfif",
+    ".gif",
+    ".tif",
+    ".tiff",
+    ".webp",
+    ".bmp",
+    ".ico",
+    ".heic",
+    ".raw",
+}
 PACKAGE_ROOT = Path(__file__).resolve().parent
 PYINSTALLER_DEFAULT_OPTS = ["-F", "-n", APP_NAME]
 

@@ -2,6 +2,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
+from PIL import Image
+
 from hsutools.cli import app
 
 runner = CliRunner()
@@ -50,3 +52,47 @@ def test_topdf_no_files(tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert "No .docx files" in result.stdout
+
+
+def test_help_lang_flag_zh() -> None:
+    result = runner.invoke(app, ["--lang", "zh", "--help"])
+
+    assert result.exit_code == 0
+    assert "介面語言" in result.stdout
+    assert "轉換" in result.stdout  # should surface translated command help
+
+
+def test_help_env_lang_zh(monkeypatch) -> None:
+    monkeypatch.setenv("HSU_LANG", "zh")
+    result = runner.invoke(app, ["--help"])
+
+    assert result.exit_code == 0
+    assert "介面語言" in result.stdout
+
+
+def test_resize_command(tmp_path: Path) -> None:
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    input_dir.mkdir()
+
+    sample = input_dir / "photo.jpg"
+    Image.new("RGB", (100, 50), color=(255, 0, 0)).save(sample)
+
+    result = runner.invoke(
+        app,
+        [
+            "resize",
+            "--input",
+            str(input_dir),
+            "--output",
+            str(output_dir),
+            "--width",
+            "50",
+        ],
+    )
+
+    assert result.exit_code == 0
+    resized = output_dir / "photo.jpg"
+    assert resized.exists()
+    with Image.open(resized) as img:
+        assert img.size == (50, 25)

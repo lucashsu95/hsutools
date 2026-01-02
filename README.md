@@ -6,7 +6,7 @@ Utilities for generating folder README trees, categorizing files, batch renaming
 
 ### With Poetry (local dev)
 ```bash
-pipx install poetry
+pip install poetry
 poetry install
 poetry run hsu --help
 ```
@@ -29,6 +29,8 @@ hsu --help
 - `hsu filem --path <dir> --mode {date|prefix|suffix} [--prefix PREFIX]`
 - `hsu rename --path <dir> --find old --replace new [--include-dirs]`
 - `hsu topdf --path <dir> [--ignore name ...]`
+- `hsu resize --path <dir> [--width 1920] [--height ...] [--format webp] [--recursive]`
+- `hsu --lang zh --help` 切換繁體說明；亦可用環境變數 `HSU_LANG=zh` 做預設
 - `hsu build-exe [--extra-arg "--onefile"]` (requires `pyinstaller` in the Poetry dev group)
 
 ## Development
