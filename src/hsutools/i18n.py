@@ -53,6 +53,14 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "en": "Show version and exit.",
         "zh": "顯示版本後離開。",
     },
+    "option.install_completion": {
+        "en": "Install completion for the current shell.",
+        "zh": "為當前 shell 安裝自動補全。",
+    },
+    "option.show_completion": {
+        "en": "Show completion for the current shell, to copy it or customize the installation.",
+        "zh": "顯示當前 shell 的自動補全腳本，供複製或自訂安裝。",
+    },
     # cpath
     "cpath.help": {
         "en": "Generate a markdown tree listing for the given directory.",
@@ -207,4 +215,13 @@ TEXTS: Dict[str, Dict[str, str]] = {
     },
     "resize.none": {"en": "No images were resized (check filters or overwrite settings).", "zh": "沒有圖片被處理（請檢查篩選或覆寫設定）。"},
     "resize.success": {"en": "Resized {count} image(s). Output: {output}", "zh": "已調整 {count} 張圖片。輸出目錄：{output}"},
+    # build-exe
+    "buildexe.help": {
+        "en": "Build a single-file executable via PyInstaller (optional).",
+        "zh": "使用 PyInstaller 建立單檔可執行檔（可選）。",
+    },
+    "buildexe.extra": {
+        "en": "Extra arguments forwarded to PyInstaller.",
+        "zh": "轉交給 PyInstaller 的額外參數。",
+    },
 }

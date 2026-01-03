@@ -31,6 +31,10 @@ class LocalizedGroup(typer.core.TyperGroup):
         _apply_locale_to_command(self)
         return super().parse_args(ctx, args)
 
+    def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
+        _apply_locale_to_command(self)
+        return super().format_help(ctx, formatter)
+
 
 app = typer.Typer(cls=LocalizedGroup, help=tr("app.help"))
 
@@ -42,6 +46,7 @@ COMMAND_HELP_KEYS = {
     "rename": "rename.help",
     "topdf": "topdf.help",
     "resize": "resize.help",
+    "build-exe": "buildexe.help",
 }
 
 OPTION_HELP_KEYS = {
@@ -93,6 +98,9 @@ OPTION_HELP_KEYS = {
         "include_hidden": "resize.include_hidden",
         "ignore": "resize.ignore",
     },
+    "build-exe": {
+        "extra": "buildexe.extra",
+    },
 }
 
 
@@ -110,6 +118,12 @@ def _apply_locale_to_command(cmd: typer.models.CommandInfo | typer.core.TyperCom
         key = opt_keys.get(param.name)
         if key:
             param.help = tr(key, lang=lang)
+        # 處理 Typer/Click 內建選項
+        elif isinstance(param, click.Option):
+            if param.name == "install_completion":
+                param.help = tr("option.install_completion", lang=lang)
+            elif param.name == "show_completion":
+                param.help = tr("option.show_completion", lang=lang)
 
     subcommands = getattr(cmd, "commands", {})
     for sub in subcommands.values():
@@ -446,15 +460,14 @@ def resize(
     typer.echo(f"✓ {tr('resize.success', count=len(written), output=written[0].parent)}")
 
 
-@app.command("build-exe")
+@app.command("build-exe", help=tr("buildexe.help"))
 def build_exe(
     extra: list[str] = typer.Option(
         None,
         "--extra-arg",
-        help="Extra arguments forwarded to PyInstaller.",
+        help=tr("buildexe.extra"),
     ),
 ) -> None:
-    """Build a single-file executable via PyInstaller (optional)."""
     code = build_executable(extra_args=extra)
     raise typer.Exit(code)
 
