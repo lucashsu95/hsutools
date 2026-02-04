@@ -224,4 +224,89 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "en": "Extra arguments forwarded to PyInstaller.",
         "zh": "轉交給 PyInstaller 的額外參數。",
     },
+    # s2tw
+    "s2tw.help": {
+        "en": "Convert Simplified Chinese to Traditional Chinese (Taiwan) in files.",
+        "zh": "將檔案中的簡體中文轉換為繁體中文（台灣）。",
+    },
+    "s2tw.path": {
+        "en": "Path to file or directory.",
+        "zh": "檔案或目錄路徑。",
+    },
+    "s2tw.extensions": {
+        "en": "File extensions to process (default: .md).",
+        "zh": "要處理的副檔名（預設：.md）。",
+    },
+    "s2tw.backup_dir": {
+        "en": "Directory for backup files.",
+        "zh": "備份檔案目錄。",
+    },
+    "s2tw.no_backup": {
+        "en": "Skip creating backup files.",
+        "zh": "跳過建立備份檔案。",
+    },
+    "s2tw.convert_names": {
+        "en": "Also convert file/directory names.",
+        "zh": "同時轉換檔案/目錄名稱。",
+    },
+    "s2tw.ignore": {
+        "en": "Names to ignore.",
+        "zh": "要忽略的名稱。",
+    },
+    "s2tw.include_hidden": {
+        "en": "Include hidden files.",
+        "zh": "包含隱藏檔。",
+    },
+    "s2tw.no_opencc": {
+        "en": "OpenCC is not installed. Please install it with:",
+        "zh": "未安裝 OpenCC。請使用以下指令安裝：",
+    },
+    "s2tw.scanning": {
+        "en": "Scanning: {path}",
+        "zh": "掃描中：{path}",
+    },
+    "s2tw.extensions_info": {
+        "en": "Extensions: {exts}",
+        "zh": "副檔名：{exts}",
+    },
+    "s2tw.backup_info": {
+        "en": "Backup enabled: {enabled}",
+        "zh": "備份功能：{enabled}",
+    },
+    "s2tw.confirm": {
+        "en": "Proceed with conversion?",
+        "zh": "要開始轉換嗎？",
+    },
+    "s2tw.converting": {
+        "en": "Converting",
+        "zh": "轉換中",
+    },
+    "s2tw.stats_header": {
+        "en": "Conversion Statistics:",
+        "zh": "轉換統計：",
+    },
+    "s2tw.stats_content": {
+        "en": "File content modified: {count}",
+        "zh": "檔案內容修改：{count} 個",
+    },
+    "s2tw.stats_files_renamed": {
+        "en": "Files renamed: {count}",
+        "zh": "檔案名稱修改：{count} 個",
+    },
+    "s2tw.stats_dirs_renamed": {
+        "en": "Directories renamed: {count}",
+        "zh": "目錄名稱修改：{count} 個",
+    },
+    "s2tw.stats_backed_up": {
+        "en": "Files backed up: {count}",
+        "zh": "備份檔案：{count} 個",
+    },
+    "s2tw.stats_errors": {
+        "en": "Errors: {count}",
+        "zh": "錯誤：{count} 個",
+    },
+    "s2tw.complete": {
+        "en": "Conversion complete!",
+        "zh": "轉換完成！",
+    },
 }

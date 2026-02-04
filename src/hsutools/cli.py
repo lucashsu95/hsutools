@@ -11,8 +11,16 @@ from typer.main import get_command
 
 from . import __version__
 from .config import DEFAULT_IGNORE_NAMES, DEFAULT_OUTPUT_FILE, DOCX_EXTENSION
-from .core import categorize_files, convert_docx_directory, generate_path_md, replace_names, resize_images
-from .utils import build_executable, resolve_directory, iter_files
+from .core import (
+    categorize_files,
+    check_opencc_available,
+    convert_docx_directory,
+    convert_s2tw_recursive,
+    generate_path_md,
+    replace_names,
+    resize_images,
+)
+from .utils import build_executable, resolve_directory, resolve_path, iter_files
 from .i18n import ENV_LANG, get_lang, set_lang, tr
 
 
@@ -47,6 +55,7 @@ COMMAND_HELP_KEYS = {
     "topdf": "topdf.help",
     "resize": "resize.help",
     "build-exe": "buildexe.help",
+    "s2tw": "s2tw.help",
 }
 
 OPTION_HELP_KEYS = {
@@ -100,6 +109,14 @@ OPTION_HELP_KEYS = {
     },
     "build-exe": {
         "extra": "buildexe.extra",
+    },
+    "s2tw": {
+        "path": "s2tw.path",
+        "backup_dir": "s2tw.backup_dir",
+        "no_backup": "s2tw.no_backup",
+        "convert_names": "s2tw.convert_names",
+        "ignore": "s2tw.ignore",
+        "include_hidden": "s2tw.include_hidden",
     },
 }
 
@@ -470,6 +487,90 @@ def build_exe(
 ) -> None:
     code = build_executable(extra_args=extra)
     raise typer.Exit(code)
+
+
+@app.command("s2tw", help=tr("s2tw.help"))
+def s2tw(
+    path: Path = typer.Option(
+        ".",
+        "--path",
+        "-p",
+        exists=True,
+        help=tr("s2tw.path"),
+    ),
+    backup_dir: Path = typer.Option(
+        ".",
+        "--backup-dir",
+        "-b",
+        file_okay=False,
+        dir_okay=True,
+        help=tr("s2tw.backup_dir"),
+    ),
+    no_backup: bool = typer.Option(
+        False,
+        "--no-backup",
+        is_flag=True,
+        help=tr("s2tw.no_backup"),
+    ),
+    convert_names: bool = typer.Option(
+        True,
+        "--convert-names/--no-convert-names",
+        help=tr("s2tw.convert_names"),
+    ),
+    ignore: list[str] = typer.Option(
+        None,
+        "--ignore",
+        "-i",
+        help=tr("s2tw.ignore"),
+    ),
+    include_hidden: bool = typer.Option(
+        False,
+        "--include-hidden",
+        is_flag=True,
+        help=tr("s2tw.include_hidden"),
+    ),
+) -> None:
+    """Convert Simplified Chinese to Traditional Chinese (Taiwan)."""
+    # Check if OpenCC is available
+    if not check_opencc_available():
+        typer.echo(tr("s2tw.no_opencc"))
+        typer.echo("pip install opencc-python-reimplemented")
+        raise typer.Exit(1)
+    
+    input_path = resolve_path(path)
+    
+    typer.echo(f"\n{tr('s2tw.scanning', path=input_path)}")
+    typer.echo(f"{tr('s2tw.backup_info', enabled=not no_backup)}\n")
+    
+    # Confirmation
+    if not typer.confirm(tr("s2tw.confirm"), default=True):
+        typer.echo("Operation cancelled.")
+        return
+    
+    typer.echo(f"\n{tr('s2tw.converting')}...")
+    
+    results, stats = convert_s2tw_recursive(
+        input_path,
+        extensions=None,  # 處理所有文字檔案
+        convert_content=True,
+        convert_names=convert_names,
+        create_backup_files=not no_backup,
+        backup_dir=backup_dir,
+        ignore_names=ignore or DEFAULT_IGNORE_NAMES,
+        include_hidden=include_hidden,
+    )
+    
+    # Show results
+    typer.echo(f"\n{tr('s2tw.stats_header')}")
+    typer.echo(f"  {tr('s2tw.stats_content', count=stats.files_content_modified)}")
+    typer.echo(f"  {tr('s2tw.stats_files_renamed', count=stats.files_renamed)}")
+    typer.echo(f"  {tr('s2tw.stats_dirs_renamed', count=stats.dirs_renamed)}")
+    typer.echo(f"  {tr('s2tw.stats_backed_up', count=stats.files_backed_up)}")
+    
+    if stats.errors > 0:
+        typer.echo(f"  {tr('s2tw.stats_errors', count=stats.errors)}")
+    
+    typer.echo(f"\n✓ {tr('s2tw.complete')}")
 
 
 _apply_locale_to_command(get_command(app))

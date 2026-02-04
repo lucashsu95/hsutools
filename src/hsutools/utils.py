@@ -22,6 +22,14 @@ def resolve_directory(path: Path) -> Path:
     return resolved
 
 
+def resolve_path(path: Path) -> Path:
+    """Resolve and validate a file or directory path."""
+    resolved = path.expanduser().resolve()
+    if not resolved.exists():
+        raise typer.BadParameter(f"path does not exist: {resolved}")
+    return resolved
+
+
 def iter_files(
     directory: Path,
     *,
@@ -68,4 +76,5 @@ __all__ = [
     "ensure_directory",
     "iter_files",
     "resolve_directory",
+    "resolve_path",
 ]

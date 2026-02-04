@@ -4,6 +4,7 @@ APP_NAME = "hsu"
 DEFAULT_OUTPUT_FILE = "path.md"
 DEFAULT_IGNORE_NAMES = {".git", "README.md", "path.md", "__pycache__"}
 DOCX_EXTENSION = ".docx"
+DEFAULT_S2TW_EXTENSIONS = {".md"}
 IMAGE_EXTENSIONS = {
     ".png",
     ".jpg",
