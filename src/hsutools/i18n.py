@@ -179,6 +179,14 @@ TEXTS: Dict[str, Dict[str, str]] = {
     "topdf.preview": {"en": "Found {count} .docx file(s) to convert:", "zh": "找到 {count} 個待轉換的 .docx："},
     "topdf.more": {"en": "... and {count} more", "zh": "…以及另外 {count} 個"},
     "topdf.confirm": {"en": "Proceed with conversion?", "zh": "要開始轉換嗎？"},
+    "topdf.no_docx2pdf": {
+        "en": "docx2pdf is not installed. Please install it with:",
+        "zh": "未安裝 docx2pdf。請使用以下指令安裝：",
+    },
+    "topdf.linux_hint": {
+        "en": "docx2pdf requires LibreOffice on Linux: sudo apt install libreoffice",
+        "zh": "docx2pdf 在 Linux 上需要 LibreOffice：sudo apt install libreoffice",
+    },
     "topdf.none_converted": {
         "en": "No .docx files were converted.",
         "zh": "沒有 .docx 被轉換。",

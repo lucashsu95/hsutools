@@ -13,6 +13,7 @@ from . import __version__
 from .config import DEFAULT_IGNORE_NAMES, DEFAULT_OUTPUT_FILE, DOCX_EXTENSION
 from .core import (
     categorize_files,
+    check_docx2pdf_available,
     check_opencc_available,
     convert_docx_directory,
     convert_s2tw_recursive,
@@ -22,6 +23,7 @@ from .core import (
 )
 from .utils import build_executable, resolve_directory, resolve_path, iter_files
 from .i18n import ENV_LANG, get_lang, set_lang, tr
+import platform
 
 
 class LocalizedGroup(typer.core.TyperGroup):
@@ -369,6 +371,14 @@ def topdf(
         help=tr("topdf.include_hidden"),
     ),
 ) -> None:
+    if not check_docx2pdf_available():
+        typer.echo(tr("topdf.no_docx2pdf"))
+        system = platform.system()
+        if system == "Linux":
+            typer.echo("sudo apt install libreoffice")
+        typer.echo("pip install docx2pdf")
+        raise typer.Exit(1)
+
     directory = resolve_directory(path)
     
     # Preview files to convert
