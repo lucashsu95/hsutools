@@ -27,6 +27,7 @@ def test_rename_command(tmp_path: Path) -> None:
     result = runner.invoke(
         app,
         ["rename", "--path", str(tmp_path), "--find", "test", "--replace", "done"],
+        input="y\n",
     )
 
     assert result.exit_code == 0
@@ -40,7 +41,7 @@ def test_filem_suffix(tmp_path: Path) -> None:
     image.write_text("img", encoding="utf-8")
     doc.write_text("doc", encoding="utf-8")
 
-    result = runner.invoke(app, ["filem", "--path", str(tmp_path), "--mode", "suffix"])
+    result = runner.invoke(app, ["filem", "--path", str(tmp_path), "--mode", "suffix"], input="y\n")
 
     assert result.exit_code == 0
     assert (tmp_path / "Images" / "pic.png").exists()
@@ -105,6 +106,7 @@ def test_rename_dry_run(tmp_path: Path) -> None:
     result = runner.invoke(
         app,
         ["rename", "--path", str(tmp_path), "--find", "test", "--replace", "done", "--dry-run"],
+        input="y\n",
     )
 
     assert result.exit_code == 0
@@ -119,7 +121,7 @@ def test_filem_dry_run(tmp_path: Path) -> None:
     image.write_text("img", encoding="utf-8")
     doc.write_text("doc", encoding="utf-8")
 
-    result = runner.invoke(app, ["filem", "--path", str(tmp_path), "--mode", "suffix", "--dry-run"])
+    result = runner.invoke(app, ["filem", "--path", str(tmp_path), "--mode", "suffix", "--dry-run"], input="y\n")
 
     assert result.exit_code == 0
     # Files should still be in original location (dry run)
@@ -132,7 +134,7 @@ def test_topdf_dry_run(tmp_path: Path) -> None:
     docx_file = tmp_path / "test.docx"
     docx_file.write_text("content", encoding="utf-8")
 
-    result = runner.invoke(app, ["topdf", "--path", str(tmp_path), "--dry-run"])
+    result = runner.invoke(app, ["topdf", "--path", str(tmp_path), "--dry-run"], input="y\n")
 
     assert result.exit_code == 0
     # PDF should not be created (dry run)
@@ -212,6 +214,7 @@ def test_topdf_recursive_flag(tmp_path: Path) -> None:
     result = runner.invoke(
         app,
         ["topdf", "--path", str(tmp_path), "--recursive", "--dry-run"],
+        input="y\n",
     )
 
     assert result.exit_code == 0
@@ -228,6 +231,7 @@ def test_filem_recursive_flag(tmp_path: Path) -> None:
     result = runner.invoke(
         app,
         ["filem", "--path", str(tmp_path), "--mode", "suffix", "--recursive"],
+        input="y\n",
     )
 
     assert result.exit_code == 0
