@@ -17,6 +17,7 @@ from .core import (
     check_opencc_available,
     convert_docx_directory,
     convert_s2tw_recursive,
+    convert_to_webp,
     FileOperationResult,
     generate_path_md,
     replace_names,
@@ -71,6 +72,7 @@ COMMAND_HELP_KEYS = {
     "resize": "resize.help",
     "build-exe": "buildexe.help",
     "s2tw": "s2tw.help",
+    "webp": "webp.help",
 }
 
 OPTION_HELP_KEYS = {
@@ -138,6 +140,14 @@ OPTION_HELP_KEYS = {
         "convert_names": "s2tw.convert_names",
         "ignore": "s2tw.ignore",
         "include_hidden": "s2tw.include_hidden",
+        "dry_run": "option.dry_run",
+    },
+    "webp": {
+        "path": "webp.path",
+        "quality": "webp.quality",
+        "recursive": "option.recursive",
+        "ignore": "webp.ignore",
+        "include_hidden": "webp.include_hidden",
         "dry_run": "option.dry_run",
     },
 }
@@ -210,7 +220,7 @@ def main(
 
 @app.command(help=tr("cpath.help"))
 def cpath(
-    path: Path = typer.Option(".", exists=True, file_okay=False, dir_okay=True, help=tr("cpath.path")),
+    path: Path = typer.Option(".", "--path", "-p", exists=True, file_okay=False, dir_okay=True, help=tr("cpath.path")),
     output: str = typer.Option(DEFAULT_OUTPUT_FILE, help=tr("cpath.output")),
     max_depth: Optional[int] = typer.Option(None, help=tr("cpath.max_depth")),
     ignore: list[str] = typer.Option(
@@ -227,7 +237,7 @@ def cpath(
 
 @app.command(help=tr("filem.help"))
 def filem(
-    path: Path = typer.Option(".", exists=True, file_okay=False, dir_okay=True, help=tr("filem.path")),
+    path: Path = typer.Option(".", "--path", "-p", exists=True, file_okay=False, dir_okay=True, help=tr("filem.path")),
     mode: Optional[str] = typer.Option(
         None,
         "--mode",
@@ -250,7 +260,7 @@ def filem(
     ),
     recursive: bool = typer.Option(
         False,
-        "--recursive",
+        "--recursive", "-r",
         is_flag=True,
         help=tr("option.recursive"),
     ),
@@ -311,7 +321,7 @@ def filem(
 
 @app.command(help=tr("rename.help"))
 def rename(
-    path: Path = typer.Option(".", exists=True, file_okay=False, dir_okay=True, help=tr("rename.path")),
+    path: Path = typer.Option(".", "--path", "-p", exists=True, file_okay=False, dir_okay=True, help=tr("rename.path")),
     find_text: Optional[str] = typer.Option(None, "--find", help=tr("rename.find")),
     replace_text: Optional[str] = typer.Option(None, "--replace", help=tr("rename.replace")),
     include_dirs: bool = typer.Option(
@@ -399,7 +409,7 @@ def rename(
 
 @app.command(help=tr("topdf.help"))
 def topdf(
-    path: Path = typer.Option(".", exists=True, file_okay=False, dir_okay=True, help=tr("topdf.path")),
+    path: Path = typer.Option(".", "--path", "-p", exists=True, file_okay=False, dir_okay=True, help=tr("topdf.path")),
     ignore: list[str] = typer.Option(
         None,
         "--ignore",
@@ -414,7 +424,7 @@ def topdf(
     ),
     recursive: bool = typer.Option(
         False,
-        "--recursive",
+        "--recursive", "-r",
         is_flag=True,
         help=tr("option.recursive"),
     ),
@@ -502,7 +512,7 @@ def resize(
     output_format: Optional[str] = typer.Option(None, "--format", help=tr("resize.format")),
     suffix: Optional[str] = typer.Option(None, help=tr("resize.suffix")),
     overwrite: bool = typer.Option(False, "--overwrite", is_flag=True, help=tr("resize.overwrite")),
-    recursive: bool = typer.Option(False, "--recursive", is_flag=True, help=tr("resize.recursive")),
+    recursive: bool = typer.Option(False, "--recursive", "-r", is_flag=True, help=tr("resize.recursive")),
     include_hidden: bool = typer.Option(False, "--include-hidden", is_flag=True, help=tr("resize.include_hidden")),
     ignore: list[str] = typer.Option(
         None,
@@ -652,6 +662,48 @@ def s2tw(
         typer.echo(f"  {tr('s2tw.stats_errors', count=stats.errors)}")
     
     typer.echo(f"\n✓ {tr('s2tw.complete')}")
+
+
+@app.command(help=tr("webp.help"))
+def webp(
+    path: Path = typer.Option(".", "--path", "-p", exists=True, file_okay=False, dir_okay=True, help=tr("webp.path")),
+    quality: int = typer.Option(80, help=tr("webp.quality"), min=1, max=100),
+    recursive: bool = typer.Option(False, "--recursive", "-r", is_flag=True, help=tr("option.recursive")),
+    ignore: list[str] = typer.Option(None, help=tr("webp.ignore")),
+    include_hidden: bool = typer.Option(False, help=tr("webp.include_hidden")),
+    dry_run: bool = typer.Option(False, "--dry-run", is_flag=True, help=tr("option.dry_run")),
+) -> None:
+    directory = resolve_directory(path)
+    results = convert_to_webp(
+        directory,
+        quality=quality,
+        ignore_names=ignore or DEFAULT_IGNORE_NAMES,
+        include_hidden=include_hidden,
+        recursive=recursive,
+        dry_run=dry_run,
+    )
+    if not results:
+        typer.echo(tr("webp.none"))
+        return
+
+    typer.echo(f"\n{tr('webp.preview', count=len(results))}")
+    for r in results[:10]:
+        typer.echo(f"  {r.path.name} → {r.detail}")
+    if len(results) > 10:
+        typer.echo(f"  {tr('topdf.more', count=len(results) - 10)}")
+
+    if not typer.confirm(f"\n{tr('webp.confirm')}", default=True):
+        typer.echo("Operation cancelled.")
+        return
+
+    succeeded = sum(1 for r in results if r.success and r.detail != "skipped: already exists")
+    skipped = sum(1 for r in results if r.detail == "skipped: already exists")
+    failed = sum(1 for r in results if not r.success)
+    typer.echo(tr("webp.success", count=succeeded))
+    if skipped:
+        typer.echo(tr("webp.skipped", count=skipped))
+    if failed:
+        typer.echo(tr("webp.failed", count=failed))
 
 
 _apply_locale_to_command(get_command(app))

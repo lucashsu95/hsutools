@@ -7,6 +7,7 @@ from .file_renamer import replace_names
 from .image_resize import resize_images
 from .s2tw import convert_s2tw_recursive, check_opencc_available, ConversionStats
 from .types import FileConversionResult, FileOperationResult, OperationStats
+from .webp_convert import convert_to_webp
 
 __all__ = [
     "categorize_files",
@@ -14,6 +15,7 @@ __all__ = [
     "check_opencc_available",
     "convert_docx_directory",
     "convert_s2tw_recursive",
+    "convert_to_webp",
     "ConversionStats",
     "FileConversionResult",
     "FileOperationResult",

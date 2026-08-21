@@ -325,6 +325,30 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "en": "Conversion complete!",
         "zh": "轉換完成！",
     },
+    # webp
+    "webp.help": {
+        "en": "Convert images to WebP format using Pillow.",
+        "zh": "使用 Pillow 將圖片轉換為 WebP 格式。",
+    },
+    "webp.path": {"en": "Directory containing images.", "zh": "包含圖片的目錄。"},
+    "webp.quality": {"en": "WebP quality (1-100).", "zh": "WebP 品質（1-100）。"},
+    "webp.ignore": {"en": "Names to ignore.", "zh": "要忽略的名稱。"},
+    "webp.include_hidden": {"en": "Include hidden files.", "zh": "包含隱藏檔。"},
+    "webp.none": {"en": "No images found to convert.", "zh": "沒有可轉換的圖片。"},
+    "webp.preview": {
+        "en": "Found {count} image(s) to convert:",
+        "zh": "找到 {count} 個待轉換的圖片：",
+    },
+    "webp.confirm": {"en": "Proceed with conversion?", "zh": "要開始轉換嗎？"},
+    "webp.success": {
+        "en": "Successfully converted {count} image(s) to WebP.",
+        "zh": "已成功轉換 {count} 張圖片為 WebP。",
+    },
+    "webp.skipped": {
+        "en": "Skipped {count} (already exists).",
+        "zh": "跳過 {count} 個（已存在）。",
+    },
+    "webp.failed": {"en": "Failed {count} image(s).", "zh": "失敗 {count} 張圖片。"},
     # operation results
     "operation.summary": {
         "en": "{operation}: {succeeded}/{total} succeeded",
