@@ -108,13 +108,15 @@ def resize_images(
     recursive: bool = False,
     include_hidden: bool = False,
     ignore_names: Iterable[str] | None = None,
+    dry_run: bool = False,
 ) -> List[Path]:
     """Resize images in a directory.
 
     Returns a list of written file paths.
     """
     target_dir = (output_dir or (input_dir / "resized")).resolve()
-    ensure_directory(target_dir)
+    if not dry_run:
+        ensure_directory(target_dir)
 
     written: List[Path] = []
     for image_path in _iter_image_files(
@@ -122,7 +124,8 @@ def resize_images(
     ):
         relative = image_path.relative_to(input_dir)
         destination_dir = target_dir / relative.parent
-        ensure_directory(destination_dir)
+        if not dry_run:
+            ensure_directory(destination_dir)
 
         ext = (f".{output_format.lower()}" if output_format else image_path.suffix).lower()
         name_suffix = suffix or ""
@@ -155,7 +158,8 @@ def resize_images(
             if fmt in {"JPEG", "JPG"} and resized.mode in {"RGBA", "P"}:
                 resized = resized.convert("RGB")
 
-            resized.save(destination_path, **save_kwargs)
+            if not dry_run:
+                resized.save(destination_path, **save_kwargs)
             written.append(destination_path)
 
     return written

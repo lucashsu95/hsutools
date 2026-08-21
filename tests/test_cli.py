@@ -96,3 +96,71 @@ def test_resize_command(tmp_path: Path) -> None:
     assert resized.exists()
     with Image.open(resized) as img:
         assert img.size == (50, 25)
+
+
+def test_rename_dry_run(tmp_path: Path) -> None:
+    original = tmp_path / "hello_test.txt"
+    original.write_text("data", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        ["rename", "--path", str(tmp_path), "--find", "test", "--replace", "done", "--dry-run"],
+    )
+
+    assert result.exit_code == 0
+    # Original should still exist (dry run)
+    assert original.exists()
+    assert not (tmp_path / "hello_done.txt").exists()
+
+
+def test_filem_dry_run(tmp_path: Path) -> None:
+    image = tmp_path / "pic.png"
+    doc = tmp_path / "notes.docx"
+    image.write_text("img", encoding="utf-8")
+    doc.write_text("doc", encoding="utf-8")
+
+    result = runner.invoke(app, ["filem", "--path", str(tmp_path), "--mode", "suffix", "--dry-run"])
+
+    assert result.exit_code == 0
+    # Files should still be in original location (dry run)
+    assert image.exists()
+    assert doc.exists()
+    assert not (tmp_path / "Images").exists()
+
+
+def test_topdf_dry_run(tmp_path: Path) -> None:
+    docx_file = tmp_path / "test.docx"
+    docx_file.write_text("content", encoding="utf-8")
+
+    result = runner.invoke(app, ["topdf", "--path", str(tmp_path), "--dry-run"])
+
+    assert result.exit_code == 0
+    # PDF should not be created (dry run)
+    assert not (tmp_path / "test.pdf").exists()
+
+
+def test_resize_dry_run(tmp_path: Path) -> None:
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    input_dir.mkdir()
+
+    sample = input_dir / "photo.jpg"
+    Image.new("RGB", (100, 50), color=(255, 0, 0)).save(sample)
+
+    result = runner.invoke(
+        app,
+        [
+            "resize",
+            "--input",
+            str(input_dir),
+            "--output",
+            str(output_dir),
+            "--width",
+            "50",
+            "--dry-run",
+        ],
+    )
+
+    assert result.exit_code == 0
+    # Output directory should not be created (dry run)
+    assert not output_dir.exists()

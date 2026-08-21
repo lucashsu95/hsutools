@@ -22,6 +22,7 @@ def convert_docx_directory(
     *,
     ignore_names: Iterable[str] | None = None,
     include_hidden: bool = False,
+    dry_run: bool = False,
 ) -> List[Path]:
     docx_files = list(
         iter_files(
@@ -35,7 +36,8 @@ def convert_docx_directory(
     converted: List[Path] = []
     for docx_file in docx_files:
         pdf_path = docx_file.with_suffix(".pdf")
-        convert(str(docx_file), str(pdf_path))
+        if not dry_run:
+            convert(str(docx_file), str(pdf_path))
         converted.append(pdf_path)
     return converted
 

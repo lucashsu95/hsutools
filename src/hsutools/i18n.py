@@ -61,6 +61,10 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "en": "Show completion for the current shell, to copy it or customize the installation.",
         "zh": "顯示當前 shell 的自動補全腳本，供複製或自訂安裝。",
     },
+    "option.dry_run": {
+        "en": "Preview changes without applying them.",
+        "zh": "預覽變更但不實際執行。",
+    },
     # cpath
     "cpath.help": {
         "en": "Generate a markdown tree listing for the given directory.",

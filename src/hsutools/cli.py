@@ -77,6 +77,7 @@ OPTION_HELP_KEYS = {
         "prefix": "filem.prefix",
         "ignore": "filem.ignore",
         "include_hidden": "filem.include_hidden",
+        "dry_run": "option.dry_run",
     },
     "rename": {
         "path": "rename.path",
@@ -85,11 +86,13 @@ OPTION_HELP_KEYS = {
         "include_dirs": "rename.include_dirs",
         "ignore": "rename.ignore",
         "include_hidden": "rename.include_hidden",
+        "dry_run": "option.dry_run",
     },
     "topdf": {
         "path": "topdf.path",
         "ignore": "topdf.ignore",
         "include_hidden": "topdf.include_hidden",
+        "dry_run": "option.dry_run",
     },
     "resize": {
         "input": "resize.input",
@@ -108,6 +111,7 @@ OPTION_HELP_KEYS = {
         "recursive": "resize.recursive",
         "include_hidden": "resize.include_hidden",
         "ignore": "resize.ignore",
+        "dry_run": "option.dry_run",
     },
     "build-exe": {
         "extra": "buildexe.extra",
@@ -119,6 +123,7 @@ OPTION_HELP_KEYS = {
         "convert_names": "s2tw.convert_names",
         "ignore": "s2tw.ignore",
         "include_hidden": "s2tw.include_hidden",
+        "dry_run": "option.dry_run",
     },
 }
 
@@ -228,6 +233,12 @@ def filem(
         is_flag=True,
         help=tr("filem.include_hidden"),
     ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        is_flag=True,
+        help=tr("option.dry_run"),
+    ),
 ) -> None:
     if mode is None:
         mode = typer.prompt(
@@ -268,6 +279,7 @@ def filem(
         prefix=prefix,
         ignore_names=ignore or DEFAULT_IGNORE_NAMES,
         include_hidden=include_hidden,
+        dry_run=dry_run,
     )
     if not moved:
         typer.echo(tr("filem.none_moved"))
@@ -297,6 +309,12 @@ def rename(
         "--include-hidden",
         is_flag=True,
         help=tr("rename.include_hidden"),
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        is_flag=True,
+        help=tr("option.dry_run"),
     ),
 ) -> None:
     if find_text is None:
@@ -348,6 +366,7 @@ def rename(
         include_dirs=include_dirs,
         ignore_names=ignore or DEFAULT_IGNORE_NAMES,
         include_hidden=include_hidden,
+        dry_run=dry_run,
     )
     if not updated:
         typer.echo(tr("rename.none_updated"))
@@ -369,6 +388,12 @@ def topdf(
         "--include-hidden",
         is_flag=True,
         help=tr("topdf.include_hidden"),
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        is_flag=True,
+        help=tr("option.dry_run"),
     ),
 ) -> None:
     if not check_docx2pdf_available():
@@ -410,6 +435,7 @@ def topdf(
         directory,
         ignore_names=ignore or DEFAULT_IGNORE_NAMES,
         include_hidden=include_hidden,
+        dry_run=dry_run,
     )
     if not converted:
         typer.echo(tr("topdf.none_converted"))
@@ -453,6 +479,12 @@ def resize(
         "-i",
         help=tr("resize.ignore"),
     ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        is_flag=True,
+        help=tr("option.dry_run"),
+    ),
 ) -> None:
     if quality < 1 or quality > 100:
         raise typer.BadParameter(tr("resize.bad_quality"))
@@ -478,6 +510,7 @@ def resize(
         recursive=recursive,
         include_hidden=include_hidden,
         ignore_names=ignore or DEFAULT_IGNORE_NAMES,
+        dry_run=dry_run,
     )
 
     if not written:
@@ -539,6 +572,12 @@ def s2tw(
         is_flag=True,
         help=tr("s2tw.include_hidden"),
     ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        is_flag=True,
+        help=tr("option.dry_run"),
+    ),
 ) -> None:
     """Convert Simplified Chinese to Traditional Chinese (Taiwan)."""
     # Check if OpenCC is available
@@ -568,6 +607,7 @@ def s2tw(
         backup_dir=backup_dir,
         ignore_names=ignore or DEFAULT_IGNORE_NAMES,
         include_hidden=include_hidden,
+        dry_run=dry_run,
     )
     
     # Show results

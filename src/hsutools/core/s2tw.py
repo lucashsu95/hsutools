@@ -43,6 +43,7 @@ def create_backup(
     file_path: Path,
     backup_dir: Path | None = None,
     backup_suffix: str = ".backup",
+    dry_run: bool = False,
 ) -> Path:
     """
     Create a backup of a file.
@@ -51,12 +52,14 @@ def create_backup(
         file_path: Path to the file to backup
         backup_dir: Directory to store backups (default: same directory)
         backup_suffix: Suffix to add to backup files
+        dry_run: If True, return backup path without actually copying
     
     Returns:
         Path to the backup file
     """
     if backup_dir:
-        backup_dir.mkdir(parents=True, exist_ok=True)
+        if not dry_run:
+            backup_dir.mkdir(parents=True, exist_ok=True)
         backup_path = backup_dir / (file_path.name + backup_suffix)
     else:
         backup_path = file_path.parent / (file_path.name + backup_suffix)
@@ -68,7 +71,8 @@ def create_backup(
         suffix = file_path.suffix
         backup_path = backup_path.parent / f"{stem}_{timestamp}{suffix}{backup_suffix}"
     
-    shutil.copy2(file_path, backup_path)
+    if not dry_run:
+        shutil.copy2(file_path, backup_path)
     return backup_path
 
 
@@ -98,6 +102,7 @@ def convert_file_content(
     *,
     create_backup_file: bool = True,
     backup_dir: Path | None = None,
+    dry_run: bool = False,
 ) -> ConversionResult:
     """
     Convert the content of a file from Simplified to Traditional Chinese.
@@ -107,6 +112,7 @@ def convert_file_content(
         converter: Optional OpenCC converter instance
         create_backup_file: Whether to create a backup before modifying
         backup_dir: Directory for backups
+        dry_run: If True, return result without modifying files
     
     Returns:
         ConversionResult with details of the operation
@@ -146,11 +152,12 @@ def convert_file_content(
         # Create backup if requested
         backup_path = None
         if create_backup_file:
-            backup_path = create_backup(file_path, backup_dir)
+            backup_path = create_backup(file_path, backup_dir, dry_run=dry_run)
         
         # Write converted content
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(converted_content)
+        if not dry_run:
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(converted_content)
         
         return ConversionResult(
             path=file_path,
@@ -252,6 +259,7 @@ def convert_s2tw_recursive(
     backup_dir: Path | None = None,
     ignore_names: Iterable[str] | None = None,
     include_hidden: bool = False,
+    dry_run: bool = False,
 ) -> tuple[list[ConversionResult], ConversionStats]:
     """
     Recursively convert files and directories from Simplified to Traditional Chinese.
@@ -267,6 +275,7 @@ def convert_s2tw_recursive(
         backup_dir: Directory for backups (default: alongside originals)
         ignore_names: Names to ignore
         include_hidden: Include hidden files/directories
+        dry_run: If True, return results without modifying files
     
     Returns:
         Tuple of (list of ConversionResult, ConversionStats)
@@ -310,6 +319,7 @@ def convert_s2tw_recursive(
                     converter,
                     create_backup_file=create_backup_files,
                     backup_dir=backup_dir,
+                    dry_run=dry_run,
                 )
                 results.append(result)
                 if result.content_changed:
@@ -351,6 +361,7 @@ def convert_s2tw_recursive(
                     converter,
                     create_backup_file=create_backup_files,
                     backup_dir=backup_dir,
+                    dry_run=dry_run,
                 )
                 content_changed = result.content_changed
                 backup_path = result.backup_path
@@ -371,7 +382,8 @@ def convert_s2tw_recursive(
                     new_file_path = root_path / new_name
                     if not new_file_path.exists():
                         try:
-                            os.rename(current_path, new_file_path)
+                            if not dry_run:
+                                os.rename(current_path, new_file_path)
                             name_changed = True
                             new_path = new_file_path
                             stats["files_renamed"] += 1
@@ -404,7 +416,8 @@ def convert_s2tw_recursive(
                     
                     if not new_dir_path.exists():
                         try:
-                            os.rename(old_dir_path, new_dir_path)
+                            if not dry_run:
+                                os.rename(old_dir_path, new_dir_path)
                             stats["dirs_renamed"] += 1
                             results.append(ConversionResult(
                                 path=old_dir_path,

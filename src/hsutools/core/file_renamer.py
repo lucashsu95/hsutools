@@ -12,6 +12,7 @@ def replace_names(
     include_dirs: bool = False,
     ignore_names: Iterable[str] | None = None,
     include_hidden: bool = False,
+    dry_run: bool = False,
 ) -> List[Path]:
     ignore = set(ignore_names or [])
     updated: List[Path] = []
@@ -29,7 +30,8 @@ def replace_names(
             else:
                 new_name = entry.name.replace(find_text, replace_text)
             target = entry.with_name(new_name)
-            entry.rename(target)
+            if not dry_run:
+                entry.rename(target)
             updated.append(target)
     return updated
 
