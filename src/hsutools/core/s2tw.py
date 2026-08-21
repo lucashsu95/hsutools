@@ -6,23 +6,16 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable, Iterator, Literal, NamedTuple
+from typing import Iterable, Iterator, NamedTuple
+
+from .. import utils
+from .types import FileConversionResult
 
 try:
     from opencc import OpenCC
     HAS_OPENCC = True
 except ImportError:
     HAS_OPENCC = False
-
-
-class ConversionResult(NamedTuple):
-    """Result of a single file or directory conversion."""
-    path: Path
-    content_changed: bool
-    name_changed: bool
-    backup_path: Path | None
-    new_path: Path | None
-    error: str | None
 
 
 class ConversionStats(NamedTuple):
@@ -32,6 +25,10 @@ class ConversionStats(NamedTuple):
     dirs_renamed: int
     files_backed_up: int
     errors: int
+
+
+# Backward-compatible alias – tests and external callers may still import this name.
+ConversionResult = FileConversionResult
 
 
 def check_opencc_available() -> bool:
@@ -47,13 +44,13 @@ def create_backup(
 ) -> Path:
     """
     Create a backup of a file.
-    
+
     Args:
         file_path: Path to the file to backup
         backup_dir: Directory to store backups (default: same directory)
         backup_suffix: Suffix to add to backup files
         dry_run: If True, return backup path without actually copying
-    
+
     Returns:
         Path to the backup file
     """
@@ -63,14 +60,14 @@ def create_backup(
         backup_path = backup_dir / (file_path.name + backup_suffix)
     else:
         backup_path = file_path.parent / (file_path.name + backup_suffix)
-    
+
     # If backup already exists, add timestamp
     if backup_path.exists():
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         stem = file_path.stem
         suffix = file_path.suffix
         backup_path = backup_path.parent / f"{stem}_{timestamp}{suffix}{backup_suffix}"
-    
+
     if not dry_run:
         shutil.copy2(file_path, backup_path)
     return backup_path
@@ -79,20 +76,20 @@ def create_backup(
 def convert_text_s2tw(text: str, converter: "OpenCC | None" = None) -> str:
     """
     Convert Simplified Chinese text to Traditional Chinese (Taiwan).
-    
+
     Args:
         text: Text to convert
         converter: Optional OpenCC converter instance
-    
+
     Returns:
         Converted text
     """
     if not HAS_OPENCC:
         raise ImportError("OpenCC is not installed. Install it with: pip install opencc-python-reimplemented")
-    
+
     if converter is None:
         converter = OpenCC("s2twp")  # Simplified to Taiwan with phrases
-    
+
     return converter.convert(text)
 
 
@@ -103,74 +100,78 @@ def convert_file_content(
     create_backup_file: bool = True,
     backup_dir: Path | None = None,
     dry_run: bool = False,
-) -> ConversionResult:
+) -> FileConversionResult:
     """
     Convert the content of a file from Simplified to Traditional Chinese.
-    
+
     Args:
         file_path: Path to the file
         converter: Optional OpenCC converter instance
         create_backup_file: Whether to create a backup before modifying
         backup_dir: Directory for backups
         dry_run: If True, return result without modifying files
-    
+
     Returns:
-        ConversionResult with details of the operation
+        FileConversionResult with details of the operation
     """
     if not HAS_OPENCC:
-        return ConversionResult(
+        return FileConversionResult(
             path=file_path,
+            success=False,
             content_changed=False,
             name_changed=False,
             backup_path=None,
             new_path=None,
             error="OpenCC is not installed",
         )
-    
+
     if converter is None:
         converter = OpenCC("s2twp")
-    
+
     try:
         # Read file content
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
-        
+
         # Convert content
         converted_content = converter.convert(content)
-        
+
         # Check if content changed
         if converted_content == content:
-            return ConversionResult(
+            return FileConversionResult(
                 path=file_path,
+                success=True,
                 content_changed=False,
                 name_changed=False,
                 backup_path=None,
                 new_path=None,
                 error=None,
             )
-        
+
         # Create backup if requested
         backup_path = None
         if create_backup_file:
             backup_path = create_backup(file_path, backup_dir, dry_run=dry_run)
-        
+
         # Write converted content
         if not dry_run:
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(converted_content)
-        
-        return ConversionResult(
+
+        return FileConversionResult(
             path=file_path,
+            success=True,
             content_changed=True,
             name_changed=False,
             backup_path=backup_path,
             new_path=None,
             error=None,
         )
-    
+
     except Exception as e:
-        return ConversionResult(
+        return FileConversionResult(
             path=file_path,
+            success=False,
             content_changed=False,
             name_changed=False,
             backup_path=None,
@@ -185,20 +186,20 @@ def convert_name(
 ) -> str:
     """
     Convert a file or directory name from Simplified to Traditional Chinese.
-    
+
     Args:
         name: Name to convert
         converter: Optional OpenCC converter instance
-    
+
     Returns:
         Converted name
     """
     if not HAS_OPENCC:
         return name
-    
+
     if converter is None:
         converter = OpenCC("s2twp")
-    
+
     return converter.convert(name)
 
 
@@ -211,42 +212,29 @@ def iter_files_for_conversion(
 ) -> Iterator[Path]:
     """
     Iterate over files for conversion.
-    
+
     Args:
         path: Input path (file or directory)
         extensions: File extensions to include (e.g., {".md", ".txt"})
         ignore_names: Names to ignore
         include_hidden: Include hidden files/directories
-    
+
     Yields:
         Paths to files
     """
-    ignore_set = set(ignore_names or [])
-    
     if path.is_file():
         if extensions is None or path.suffix.lower() in extensions:
             yield path
         return
-    
-    for root, dirs, files in os.walk(path, topdown=False):
-        root_path = Path(root)
-        
-        # Filter directories
-        dirs[:] = [
-            d for d in dirs
-            if d not in ignore_set
-            and (include_hidden or not d.startswith("."))
-        ]
-        
-        for filename in files:
-            if filename in ignore_set:
-                continue
-            if not include_hidden and filename.startswith("."):
-                continue
-            
-            file_path = root_path / filename
-            if extensions is None or file_path.suffix.lower() in extensions:
-                yield file_path
+
+    yield from utils.iter_files(
+        path,
+        ignore_names=ignore_names,
+        include_hidden=include_hidden,
+        extensions=extensions,
+        recursive=True,
+        topdown=False,
+    )
 
 
 def convert_s2tw_recursive(
@@ -260,12 +248,12 @@ def convert_s2tw_recursive(
     ignore_names: Iterable[str] | None = None,
     include_hidden: bool = False,
     dry_run: bool = False,
-) -> tuple[list[ConversionResult], ConversionStats]:
+) -> tuple[list[FileConversionResult], ConversionStats]:
     """
     Recursively convert files and directories from Simplified to Traditional Chinese.
-    
+
     Uses bottom-up traversal to safely rename directories.
-    
+
     Args:
         path: Input path (file or directory)
         extensions: File extensions to process (None = all text files)
@@ -276,13 +264,13 @@ def convert_s2tw_recursive(
         ignore_names: Names to ignore
         include_hidden: Include hidden files/directories
         dry_run: If True, return results without modifying files
-    
+
     Returns:
-        Tuple of (list of ConversionResult, ConversionStats)
+        Tuple of (list of FileConversionResult, ConversionStats)
     """
     if not HAS_OPENCC:
         raise ImportError("OpenCC is not installed. Install it with: pip install opencc-python-reimplemented")
-    
+
     # 當 extensions 為 None 時，使用常見文字檔案擴展名
     # 這樣可以處理大部分需要轉換的檔案類型
     text_extensions = {
@@ -292,14 +280,13 @@ def convert_s2tw_recursive(
         ".sh", ".bat", ".ps1", ".sql", ".csv", ".ini", ".cfg", ".conf",
         ".toml", ".rst", ".tex", ".log", ".properties", ".env",
     }
-    
+
     # 如果未指定 extensions，使用所有文字檔案擴展名
     effective_extensions = extensions if extensions is not None else text_extensions
-    
+
     converter = OpenCC("s2twp")
-    results: list[ConversionResult] = []
-    ignore_set = set(ignore_names or [])
-    
+    results: list[FileConversionResult] = []
+
     stats = {
         "files_content_modified": 0,
         "files_renamed": 0,
@@ -307,9 +294,9 @@ def convert_s2tw_recursive(
         "files_backed_up": 0,
         "errors": 0,
     }
-    
+
     input_path = Path(path)
-    
+
     if input_path.is_file():
         # Single file mode
         if input_path.suffix.lower() in effective_extensions:
@@ -328,116 +315,111 @@ def convert_s2tw_recursive(
                     stats["files_backed_up"] += 1
                 if result.error:
                     stats["errors"] += 1
-        
+
         return results, ConversionStats(**stats)
-    
-    # Directory mode - use bottom-up traversal
-    for root, dirs, files in os.walk(input_path, topdown=False):
-        root_path = Path(root)
-        
-        # Process files
-        for filename in files:
-            if filename in ignore_set:
-                continue
-            if not include_hidden and filename.startswith("."):
-                continue
-            
-            file_path = root_path / filename
-            
-            # Check extension - 檢查檔案是否為文字檔案
-            if file_path.suffix.lower() not in effective_extensions:
-                continue
-            
-            content_changed = False
-            name_changed = False
-            backup_path = None
-            new_path = None
-            error = None
-            
-            # Convert content
-            if convert_content:
-                result = convert_file_content(
-                    file_path,
-                    converter,
-                    create_backup_file=create_backup_files,
-                    backup_dir=backup_dir,
-                    dry_run=dry_run,
-                )
-                content_changed = result.content_changed
-                backup_path = result.backup_path
-                error = result.error
-                
-                if content_changed:
-                    stats["files_content_modified"] += 1
-                if backup_path:
-                    stats["files_backed_up"] += 1
-                if error:
-                    stats["errors"] += 1
-            
-            # Convert filename (after content, in case path changes)
-            current_path = file_path
-            if convert_names and not error:
-                new_name = convert_name(filename, converter)
-                if new_name != filename:
-                    new_file_path = root_path / new_name
-                    if not new_file_path.exists():
-                        try:
-                            if not dry_run:
-                                os.rename(current_path, new_file_path)
-                            name_changed = True
-                            new_path = new_file_path
-                            stats["files_renamed"] += 1
-                        except Exception as e:
-                            error = str(e)
-                            stats["errors"] += 1
-            
-            if content_changed or name_changed or error:
-                results.append(ConversionResult(
-                    path=file_path,
-                    content_changed=content_changed,
-                    name_changed=name_changed,
-                    backup_path=backup_path,
-                    new_path=new_path,
-                    error=error,
-                ))
-        
-        # Process directories (rename)
-        if convert_names:
-            for dirname in dirs:
-                if dirname in ignore_set:
-                    continue
-                if not include_hidden and dirname.startswith("."):
-                    continue
-                
-                new_dirname = convert_name(dirname, converter)
-                if new_dirname != dirname:
-                    old_dir_path = root_path / dirname
-                    new_dir_path = root_path / new_dirname
-                    
-                    if not new_dir_path.exists():
-                        try:
-                            if not dry_run:
-                                os.rename(old_dir_path, new_dir_path)
-                            stats["dirs_renamed"] += 1
-                            results.append(ConversionResult(
-                                path=old_dir_path,
-                                content_changed=False,
-                                name_changed=True,
-                                backup_path=None,
-                                new_path=new_dir_path,
-                                error=None,
-                            ))
-                        except Exception as e:
-                            stats["errors"] += 1
-                            results.append(ConversionResult(
-                                path=old_dir_path,
-                                content_changed=False,
-                                name_changed=False,
-                                backup_path=None,
-                                new_path=None,
-                                error=str(e),
-                            ))
-    
+
+    # Directory mode — two bottom-up passes via utils helpers.
+    # Pass 1: convert file content and rename files (bottom-up).
+    for file_path in utils.iter_files(
+        input_path,
+        ignore_names=ignore_names,
+        include_hidden=include_hidden,
+        extensions=effective_extensions,
+        recursive=True,
+        topdown=False,
+    ):
+        content_changed = False
+        name_changed = False
+        backup_path = None
+        new_path = None
+        error = None
+
+        # Convert content
+        if convert_content:
+            result = convert_file_content(
+                file_path,
+                converter,
+                create_backup_file=create_backup_files,
+                backup_dir=backup_dir,
+                dry_run=dry_run,
+            )
+            content_changed = result.content_changed
+            backup_path = result.backup_path
+            error = result.error
+
+            if content_changed:
+                stats["files_content_modified"] += 1
+            if backup_path:
+                stats["files_backed_up"] += 1
+            if error:
+                stats["errors"] += 1
+
+        # Convert filename (after content, in case path changes)
+        current_path = file_path
+        if convert_names and not error:
+            new_name = convert_name(file_path.name, converter)
+            if new_name != file_path.name:
+                new_file_path = file_path.parent / new_name
+                if not new_file_path.exists():
+                    try:
+                        if not dry_run:
+                            os.rename(current_path, new_file_path)
+                        name_changed = True
+                        new_path = new_file_path
+                        stats["files_renamed"] += 1
+                    except Exception as e:
+                        error = str(e)
+                        stats["errors"] += 1
+
+        if content_changed or name_changed or error:
+            results.append(FileConversionResult(
+                path=file_path,
+                success=error is None,
+                content_changed=content_changed,
+                name_changed=name_changed,
+                backup_path=backup_path,
+                new_path=new_path,
+                error=error,
+            ))
+
+    # Pass 2: rename directories (bottom-up, safe because children already processed).
+    if convert_names:
+        for dir_path in utils.iter_dirs(
+            input_path,
+            ignore_names=ignore_names,
+            include_hidden=include_hidden,
+            topdown=False,
+        ):
+            new_dirname = convert_name(dir_path.name, converter)
+            if new_dirname != dir_path.name:
+                new_dir_path = dir_path.parent / new_dirname
+
+                if not new_dir_path.exists():
+                    try:
+                        if not dry_run:
+                            os.rename(dir_path, new_dir_path)
+                        stats["dirs_renamed"] += 1
+                        results.append(FileConversionResult(
+                            path=dir_path,
+                            success=True,
+                            content_changed=False,
+                            name_changed=True,
+                            backup_path=None,
+                            new_path=new_dir_path,
+                            error=None,
+                        ))
+                    except Exception as e:
+                        stats["errors"] += 1
+                        results.append(FileConversionResult(
+                            path=dir_path,
+                            success=False,
+                            content_changed=False,
+                            name_changed=False,
+                            backup_path=None,
+                            new_path=None,
+                            error=str(e),
+                        ))
+
     return results, ConversionStats(**stats)
 
 
@@ -447,7 +429,7 @@ __all__ = [
     "convert_name",
     "convert_s2tw_recursive",
     "convert_text_s2tw",
-    "ConversionResult",
+    "FileConversionResult",
     "ConversionStats",
     "create_backup",
 ]

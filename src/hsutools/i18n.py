@@ -65,6 +65,10 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "en": "Preview changes without applying them.",
         "zh": "預覽變更但不實際執行。",
     },
+    "option.recursive": {
+        "en": "Process subdirectories recursively.",
+        "zh": "遞迴處理子目錄。",
+    },
     # cpath
     "cpath.help": {
         "en": "Generate a markdown tree listing for the given directory.",
@@ -320,5 +324,18 @@ TEXTS: Dict[str, Dict[str, str]] = {
     "s2tw.complete": {
         "en": "Conversion complete!",
         "zh": "轉換完成！",
+    },
+    # operation results
+    "operation.summary": {
+        "en": "{operation}: {succeeded}/{total} succeeded",
+        "zh": "{operation}：{succeeded}/{total} 項成功",
+    },
+    "operation.failed_header": {
+        "en": "Failed items:",
+        "zh": "失敗項目：",
+    },
+    "operation.failed_item": {
+        "en": "  {path}: {error}",
+        "zh": "  {path}：{error}",
     },
 }

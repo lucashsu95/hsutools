@@ -17,6 +17,7 @@ from .core import (
     check_opencc_available,
     convert_docx_directory,
     convert_s2tw_recursive,
+    FileOperationResult,
     generate_path_md,
     replace_names,
     resize_images,
@@ -24,6 +25,18 @@ from .core import (
 from .utils import build_executable, resolve_directory, resolve_path, iter_files
 from .i18n import ENV_LANG, get_lang, set_lang, tr
 import platform
+
+
+def _print_operation_results(results: list[FileOperationResult], operation_name: str) -> None:
+    total = len(results)
+    succeeded = sum(1 for r in results if r.success)
+    failed = total - succeeded
+    typer.echo(tr("operation.summary", operation=operation_name, succeeded=succeeded, total=total))
+    if failed:
+        typer.echo(tr("operation.failed_header"))
+        for r in results:
+            if not r.success:
+                typer.echo(tr("operation.failed_item", path=r.path, error=r.error or "Unknown"))
 
 
 class LocalizedGroup(typer.core.TyperGroup):
@@ -77,6 +90,7 @@ OPTION_HELP_KEYS = {
         "prefix": "filem.prefix",
         "ignore": "filem.ignore",
         "include_hidden": "filem.include_hidden",
+        "recursive": "option.recursive",
         "dry_run": "option.dry_run",
     },
     "rename": {
@@ -92,6 +106,7 @@ OPTION_HELP_KEYS = {
         "path": "topdf.path",
         "ignore": "topdf.ignore",
         "include_hidden": "topdf.include_hidden",
+        "recursive": "option.recursive",
         "dry_run": "option.dry_run",
     },
     "resize": {
@@ -233,6 +248,12 @@ def filem(
         is_flag=True,
         help=tr("filem.include_hidden"),
     ),
+    recursive: bool = typer.Option(
+        False,
+        "--recursive",
+        is_flag=True,
+        help=tr("option.recursive"),
+    ),
     dry_run: bool = typer.Option(
         False,
         "--dry-run",
@@ -259,7 +280,7 @@ def filem(
     directory = resolve_directory(path)
     
     # Preview files to be moved
-    files_to_move = list(iter_files(directory, ignore_names=ignore or DEFAULT_IGNORE_NAMES, include_hidden=include_hidden))
+    files_to_move = list(iter_files(directory, ignore_names=ignore or DEFAULT_IGNORE_NAMES, include_hidden=include_hidden, recursive=recursive))
     
     if not files_to_move:
         typer.echo(tr("filem.none_found"))
@@ -279,6 +300,7 @@ def filem(
         prefix=prefix,
         ignore_names=ignore or DEFAULT_IGNORE_NAMES,
         include_hidden=include_hidden,
+        recursive=recursive,
         dry_run=dry_run,
     )
     if not moved:
@@ -371,7 +393,8 @@ def rename(
     if not updated:
         typer.echo(tr("rename.none_updated"))
     else:
-        typer.echo(f"✓ {tr('rename.success', count=len(updated))}")
+        results = [FileOperationResult(path=p, success=True) for p in updated]
+        _print_operation_results(results, tr("rename.success", count=len(updated)))
 
 
 @app.command(help=tr("topdf.help"))
@@ -388,6 +411,12 @@ def topdf(
         "--include-hidden",
         is_flag=True,
         help=tr("topdf.include_hidden"),
+    ),
+    recursive: bool = typer.Option(
+        False,
+        "--recursive",
+        is_flag=True,
+        help=tr("option.recursive"),
     ),
     dry_run: bool = typer.Option(
         False,
@@ -413,6 +442,7 @@ def topdf(
             ignore_names=ignore or DEFAULT_IGNORE_NAMES,
             include_hidden=include_hidden,
             extensions={DOCX_EXTENSION},
+            recursive=recursive,
         )
     )
     
@@ -435,6 +465,7 @@ def topdf(
         directory,
         ignore_names=ignore or DEFAULT_IGNORE_NAMES,
         include_hidden=include_hidden,
+        recursive=recursive,
         dry_run=dry_run,
     )
     if not converted:

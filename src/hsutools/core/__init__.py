@@ -6,6 +6,7 @@ from .file_manage import categorize_files
 from .file_renamer import replace_names
 from .image_resize import resize_images
 from .s2tw import convert_s2tw_recursive, check_opencc_available, ConversionStats
+from .types import FileConversionResult, FileOperationResult, OperationStats
 
 __all__ = [
     "categorize_files",
@@ -14,7 +15,10 @@ __all__ = [
     "convert_docx_directory",
     "convert_s2tw_recursive",
     "ConversionStats",
+    "FileConversionResult",
+    "FileOperationResult",
     "generate_path_md",
+    "OperationStats",
     "resize_images",
     "replace_names",
 ]

@@ -164,3 +164,72 @@ def test_resize_dry_run(tmp_path: Path) -> None:
     assert result.exit_code == 0
     # Output directory should not be created (dry run)
     assert not output_dir.exists()
+
+
+def test_file_conversion_result_type() -> None:
+    from hsutools.core.types import FileConversionResult
+
+    result = FileConversionResult(path=Path("/tmp/test.docx"), success=True)
+    assert result.path == Path("/tmp/test.docx")
+    assert result.success is True
+    assert result.content_changed is False
+    assert result.name_changed is False
+    assert result.new_path is None
+    assert result.backup_path is None
+    assert result.error is None
+
+    full = FileConversionResult(
+        path=Path("/tmp/test.docx"),
+        success=True,
+        content_changed=True,
+        name_changed=True,
+        new_path=Path("/tmp/test.pdf"),
+        backup_path=Path("/tmp/backup/test.docx"),
+        error=None,
+    )
+    assert full.content_changed is True
+    assert full.name_changed is True
+    assert full.new_path == Path("/tmp/test.pdf")
+    assert full.backup_path == Path("/tmp/backup/test.docx")
+
+    r1 = FileConversionResult(path=Path("/a"), success=True)
+    r2 = FileConversionResult(path=Path("/a"), success=True)
+    assert r1 == r2
+
+    p, s, cc, nc, np, bp, e = full
+    assert p == Path("/tmp/test.docx")
+    assert s is True
+    assert cc is True
+    assert nc is True
+
+
+def test_topdf_recursive_flag(tmp_path: Path) -> None:
+    sub = tmp_path / "subdir"
+    sub.mkdir()
+    (tmp_path / "root.docx").write_text("root", encoding="utf-8")
+    (sub / "nested.docx").write_text("nested", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        ["topdf", "--path", str(tmp_path), "--recursive", "--dry-run"],
+    )
+
+    assert result.exit_code == 0
+    assert "root.docx" in result.stdout
+    assert "nested.docx" in result.stdout
+
+
+def test_filem_recursive_flag(tmp_path: Path) -> None:
+    sub = tmp_path / "subdir"
+    sub.mkdir()
+    (tmp_path / "image.png").write_text("img", encoding="utf-8")
+    (sub / "nested.png").write_text("nested", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        ["filem", "--path", str(tmp_path), "--mode", "suffix", "--recursive"],
+    )
+
+    assert result.exit_code == 0
+    assert (tmp_path / "Images" / "image.png").exists()
+    assert (sub / "Images" / "nested.png").exists()

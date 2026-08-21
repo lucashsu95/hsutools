@@ -23,6 +23,7 @@ def convert_docx_directory(
     ignore_names: Iterable[str] | None = None,
     include_hidden: bool = False,
     dry_run: bool = False,
+    recursive: bool = False,
 ) -> List[Path]:
     docx_files = list(
         iter_files(
@@ -30,6 +31,7 @@ def convert_docx_directory(
             ignore_names=ignore_names,
             include_hidden=include_hidden,
             extensions={DOCX_EXTENSION},
+            recursive=recursive,
         )
     )
 

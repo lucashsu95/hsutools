@@ -11,6 +11,15 @@ def _link_for(path: Path, root: Path) -> str:
     return relative.as_posix().replace(" ", "%20")
 
 
+def _is_entry_allowed(entry: Path, ignore_set: set[str], include_hidden: bool) -> bool:
+    """Check if an entry should be included in the tree."""
+    if entry.name in ignore_set:
+        return False
+    if not include_hidden and entry.name.startswith("."):
+        return False
+    return True
+
+
 def _render_tree(
     root: Path,
     *,
@@ -22,7 +31,7 @@ def _render_tree(
 
     def dfs(current: Path, depth: int, index_stack: list[int]) -> None:
         entries = sorted(
-            [p for p in current.iterdir() if p.name not in ignore],
+            [p for p in current.iterdir() if _is_entry_allowed(p, ignore, include_hidden=False)],
             key=lambda p: (p.is_file(), p.name.lower()),
         )
         dir_counter = 0

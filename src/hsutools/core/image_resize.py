@@ -6,32 +6,9 @@ from typing import Iterable, List, Optional, Tuple
 from PIL import Image, ImageOps
 
 from ..config import IMAGE_EXTENSIONS
-from ..utils import ensure_directory
+from ..utils import _is_path_hidden, ensure_directory, iter_files
 
 Resample = getattr(Image, "Resampling", Image)
-
-
-def _is_hidden(path: Path, root: Path) -> bool:
-    """Check whether any part of the relative path is hidden."""
-    return any(part.startswith(".") for part in path.relative_to(root).parts)
-
-
-def _iter_image_files(
-    directory: Path,
-    *,
-    recursive: bool,
-    include_hidden: bool,
-    ignore_names: Iterable[str] | None = None,
-) -> Iterable[Path]:
-    ignore = set(ignore_names or [])
-    iterator = directory.rglob("*") if recursive else directory.iterdir()
-    for path in iterator:
-        if path.name in ignore:
-            continue
-        if not include_hidden and _is_hidden(path, directory):
-            continue
-        if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS:
-            yield path
 
 
 def _compute_target_size(
@@ -119,9 +96,15 @@ def resize_images(
         ensure_directory(target_dir)
 
     written: List[Path] = []
-    for image_path in _iter_image_files(
-        input_dir, recursive=recursive, include_hidden=include_hidden, ignore_names=ignore_names
+    for image_path in iter_files(
+        input_dir,
+        ignore_names=ignore_names,
+        include_hidden=include_hidden,
+        extensions=IMAGE_EXTENSIONS,
+        recursive=recursive,
     ):
+        if not include_hidden and recursive and _is_path_hidden(image_path, input_dir):
+            continue
         relative = image_path.relative_to(input_dir)
         destination_dir = target_dir / relative.parent
         if not dry_run:

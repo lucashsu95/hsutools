@@ -64,9 +64,15 @@ def categorize_files(
     ignore_names: Iterable[str] | None = None,
     include_hidden: bool = False,
     dry_run: bool = False,
+    recursive: bool = False,
 ) -> List[Path]:
     files = list(
-        iter_files(directory, ignore_names=ignore_names, include_hidden=include_hidden)
+        iter_files(
+            directory,
+            ignore_names=ignore_names,
+            include_hidden=include_hidden,
+            recursive=recursive,
+        )
     )
     if mode == "date":
         return _by_date(files, dry_run=dry_run)
