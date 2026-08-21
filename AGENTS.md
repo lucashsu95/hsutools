@@ -34,12 +34,14 @@ src/hsutools/
 ├── i18n.py         # Bilingual support (en/zh), env var HSU_LANG
 ├── utils.py        # Utility functions (path resolution, file iteration, PyInstaller wrapper)
 └── core/
-    ├── create_path.py      # Directory tree generation
-    ├── docx_to_pdf.py      # DOCX → PDF conversion
-    ├── file_manage.py      # File categorization
-    ├── file_renamer.py     # Batch rename
-    ├── image_resize.py     # Image resizing
-    └── s2tw.py             # Simplified → Traditional Chinese (OpenCC)
+    ├── types.py             # Shared result types (FileOperationResult, etc.)
+    ├── create_path.py       # Directory tree generation
+    ├── docx_to_pdf.py       # DOCX → PDF conversion
+    ├── file_manage.py       # File categorization
+    ├── file_renamer.py      # Batch rename
+    ├── image_resize.py      # Image resizing
+    ├── s2tw.py              # Simplified → Traditional Chinese (OpenCC)
+    └── webp_convert.py      # Image → WebP conversion (Pillow)
 ```
 
 ## CLI Commands
@@ -52,7 +54,42 @@ src/hsutools/
 | `hsu topdf` | Convert .docx → .pdf | docx2pdf |
 | `hsu resize` | Resize images (multiple formats) | Pillow |
 | `hsu s2tw` | Simplified → Traditional Chinese | OpenCC (optional) |
+| `hsu webp` | Image → WebP conversion | Pillow |
 | `hsu build-exe` | Build exe via PyInstaller | PyInstaller |
+
+## Module Design Principles
+
+Each `core/` module is evaluated against three classical criteria. **All three must answer YES.**
+
+### Parnas — Information Hiding
+> 如果這個模組的某個實作細節改了，有幾個其他模組要跟著改？
+
+**答案應該是 0。** 每個模組隱藏自己的實作細節，其他模組只依賴公開 API。
+
+### Ousterhout — Deep Module
+> 呼叫這個模組的人，需要讀它的實作才能正確使用它嗎？
+
+**答案應該是不需要。** 模組的 API 應該直覺到不需要看原始碼就能使用。
+
+### Evans — Ubiquitous Language
+> 這個模組用的詞，和業務討論時用的詞一樣嗎？
+
+**答案應該是一樣的。** 模組名稱、函式名稱、參數名稱都和使用者心智模型一致。
+
+### 當前模組狀態
+
+| Module | Parnas | Ousterhout | Evans |
+|--------|--------|------------|-------|
+| `utils.py` | ✅ | ✅ | ✅ |
+| `types.py` | ✅ | ✅ | ✅ |
+| `config.py` | ✅ | ✅ | ✅ |
+| `create_path.py` | ✅ | ✅ | ✅ |
+| `file_renamer.py` | ✅ | ✅ | ✅ |
+| `file_manage.py` | ✅ | ✅ | ✅ |
+| `image_resize.py` | ✅ | ✅ | ✅ |
+| `docx_to_pdf.py` | ✅ | ✅ | ✅ |
+| `webp_convert.py` | ✅ | ✅ | ✅ |
+| `s2tw.py` | ✅ | ✅ | ✅ |
 
 ## Coding Conventions
 
