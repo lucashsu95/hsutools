@@ -1,6 +1,6 @@
 [project]
 name = "hsutools"
-version = "1.3.0"
+version = "1.3.1"
 description = "Utilities for directory readme generation, file management, renaming, docx to pdf conversion, and image to webp conversion."
 authors = [{ name = "hsutools maintainers" }]
 readme = "README.md"
