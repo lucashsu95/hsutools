@@ -10,19 +10,19 @@
 
 ```bash
 # Install
-poetry install
-poetry install --extras s2tw  # with Chinese conversion support
+uv sync
+uv sync --extra s2tw  # with Chinese conversion support
 
 # Run
-poetry run hsu --help
-poetry run hsu --lang zh --help  # Chinese interface
+uv run hsu --help
+uv run hsu --lang zh --help  # Chinese interface
 
 # Test
-poetry run pytest
+uv run pytest
 
 # Build
-poetry build
-poetry run hsu build-exe  # Windows exe (requires PyInstaller)
+uv build
+uv run hsu build-exe  # Windows exe (requires PyInstaller)
 ```
 
 ## Architecture

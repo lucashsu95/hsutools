@@ -1,30 +1,34 @@
-[tool.poetry]
+[project]
 name = "hsutools"
 version = "1.3.0"
 description = "Utilities for directory readme generation, file management, renaming, docx to pdf conversion, and image to webp conversion."
-authors = ["hsutools maintainers"]
+authors = [{ name = "hsutools maintainers" }]
 readme = "README.md"
 license = "MIT"
-packages = [{ include = "hsutools", from = "src" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "typer>=0.12.5,<1.0",
+    "click>=8.1.7,<8.2",
+    "docx2pdf>=0.1.8,<1.0",
+    "pillow>=10.0,<12.0",
+    "opencc-python-reimplemented>=0.1.7,<1.0",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.14"
-typer = {version = "^0.12.5", extras = ["all"]}
-click = ">=8.1.7,<8.2"
-docx2pdf = "^0.1.8"
-pillow = ">=10.0,<12.0"
-opencc-python-reimplemented = {version = "^0.1.7", optional = true}
+[project.optional-dependencies]
+s2tw = ["opencc-python-reimplemented>=0.1.7,<1.0"]
 
-[tool.poetry.extras]
-s2tw = ["opencc-python-reimplemented"]
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3.3"
-pyinstaller = "^6.11.0"
-
-[tool.poetry.scripts]
+[project.scripts]
 hsu = "hsutools.cli:app"
 
 [build-system]
-requires = ["poetry-core>=1.9.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hsutools"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.3,<9.0",
+    "pyinstaller>=6.11.0,<7.0",
+]

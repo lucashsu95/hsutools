@@ -10,18 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: "pip"
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v3
+      - uses: astral-sh/setup-uv@v5
       - name: Install deps
-        run: |
-          poetry install --no-interaction --no-root
-          poetry install --no-interaction
+        run: uv sync
       - name: Build wheel and sdist
-        run: poetry build
+        run: uv build
       - name: Upload packages artifact
         uses: actions/upload-artifact@v4
         with:
@@ -33,17 +26,11 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: "pip"
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v3
+      - uses: astral-sh/setup-uv@v5
       - name: Install deps (includes dev for PyInstaller)
-        run: |
-          poetry install --no-interaction
+        run: uv sync
       - name: Build exe via Typer command
-        run: poetry run hsu build-exe
+        run: uv run hsu build-exe
       - name: Upload exe artifact
         uses: actions/upload-artifact@v4
         with:

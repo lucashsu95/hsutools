@@ -1,20 +1,19 @@
 # hsutools
 
-Utilities for generating folder README trees, categorizing files, batch renaming, converting docx to pdf, and **Simplified to Traditional Chinese conversion**. The project now uses a standard `src/hsutools` package layout, Typer for the CLI, and Poetry for dependency management.
+Utilities for generating folder README trees, categorizing files, batch renaming, converting docx to pdf, and **Simplified to Traditional Chinese conversion**. The project uses a standard `src/hsutools` package layout, Typer for the CLI, and uv for dependency management.
 
 ## Install
 
-### With Poetry (local dev)
+### With uv (local dev)
 ```bash
-pip install poetry
-poetry install
-poetry run hsu --help
+uv sync
+uv run hsu --help
 ```
 
 ### Install with optional features
 ```bash
 # Install with Simplified-to-Traditional Chinese conversion support
-poetry install --extras s2tw
+uv sync --extra s2tw
 ```
 
 ### From PyPI (after release)
@@ -71,9 +70,9 @@ poetry install --extras s2tw
 
 ## Development
 
-- Run tests: `poetry run pytest`
-- Build artifacts: `poetry build`
-- Optional exe: `poetry run hsu build-exe`
+- Run tests: `uv run pytest`
+- Build artifacts: `uv build`
+- Optional exe: `uv run hsu build-exe`
 - Release: tag `v*.*.*` and GitHub Actions will build wheel/sdist, publish to PyPI (requires `PYPI_API_TOKEN` secret), and attach artifacts (wheel/sdist + Windows exe) to the GitHub Release.
 
 ## Project structure
