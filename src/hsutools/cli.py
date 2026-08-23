@@ -189,6 +189,7 @@ def _lang_callback(value: Optional[str]) -> Optional[str]:
 
 def _version_callback(value: bool) -> None:
     if value:
+        typer.echo(tr("app.banner"))
         typer.echo(f"hsutools {__version__}")
         raise typer.Exit()
 
